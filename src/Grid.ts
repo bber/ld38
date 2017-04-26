@@ -15,7 +15,10 @@ export class Grid {
     private surfaceTiles: any = [];
     public surfaceSpriteContainer : PIXI.Container;
 
-    private undergroundSpriteContainer : PIXI.Container;
+    private undergroundTiles: any = [];
+    public undergroundSpriteContainer : PIXI.Container;
+
+    private activeTiles: any = [];
     private activeSpriteContainer : PIXI.Container;
 
     private tileTextures: any = {};
@@ -45,10 +48,46 @@ export class Grid {
 
         this.surfaceSpriteContainer = new PIXI.Container();
         this.initializeSurfaceTiles();
+
+        this.undergroundSpriteContainer = new PIXI.Container();
+        this.initializeUndergroundTiles();
     }
 
     public getPlaybleTiles(): number {
         return this.playableTiles;
+    }
+
+    public switchToSurface(): void {
+        this.activeSpriteContainer = this.surfaceSpriteContainer;
+        this.activeTiles = this.surfaceTiles;
+
+        this.surfaceSpriteContainer.visible = true;
+        this.undergroundSpriteContainer.visible = false;
+    }
+
+    public switchToUnderground(): void {
+        this.activeSpriteContainer = this.undergroundSpriteContainer;
+        this.activeTiles = this.undergroundTiles;
+        
+        this.surfaceSpriteContainer.visible = false;
+        this.undergroundSpriteContainer.visible = true;
+    }
+
+    private initializeUndergroundTiles(): void {
+        for(var y = 0; y < this.totalHeight; y++){
+            for(var x = 0; x < this.totalWidth; x++){
+                let tileIndex: number = this.getTileIndex(x, y);
+                let sprite: PIXI.Sprite = this.createSpriteAtPosition('passiveDirt', x, y);
+
+                this.undergroundTiles[tileIndex] = new PassiveTile();
+                this.undergroundTiles[tileIndex].isDefaultTile = true;
+                this.undergroundSpriteContainer.addChildAt(sprite, tileIndex);
+            }
+        }
+        
+        // for(var i = 0; i < defaultConnectionTiles.length; i++){
+        //     while(!generateDefaultConnections(defaultConnectionTiles[i]));
+        // }
     }
 
     private initializeSurfaceTiles(): void {
@@ -110,4 +149,62 @@ export class Grid {
 
         return sprite;
     }
+
+    private checkCanPlaceTile(activeTile: any, x: number, y: number): boolean {
+        if(activeTile.id == this.activeTiles[this.getTileIndex(x, y)].id) {
+            return false;
+        }
+
+        var undergroundAndCanBePlaced = activeTile.isUnderground && this.activeSpriteContainer == this.undergroundSpriteContainer && this.activeTiles == this.undergroundTiles;
+        var surfaceAndCanbePlaced = !activeTile.isUnderground && this.activeSpriteContainer == this.surfaceSpriteContainer && this.activeTiles == this.surfaceTiles;
+
+        if(!undergroundAndCanBePlaced && !surfaceAndCanbePlaced){
+            return false;
+        }
+
+        if(activeTile.id == 'road'){
+            return this.checkHasConnectionOfType(activeTile, x, y);
+        }
+        else if(activeTile.id == 'pipe'){
+            return this.checkHasConnectionOfType(activeTile, x, y) || this.checkHasConnectionOfType({ id: 'powerwatercable'}, x, y);
+        }
+        else if(activeTile.id == 'powercable'){
+            return this.checkHasConnectionOfType(activeTile, x, y) || this.checkHasConnectionOfType({ id: 'powerwatercable'}, x, y);
+        }
+        else if(activeTile.id == 'powerwatercable'){
+            return (this.checkHasConnectionOfType({ id: 'pipe'}, x, y) && this.checkHasConnectionOfType({ id: 'powercable'}, x, y)) || this.checkHasConnectionOfType({ id: 'powerwatercable'}, x, y);
+        }
+
+        return true;
+    }
+
+    private checkHasConnectionOfType(activeTile: any, x: number, y: number): boolean {
+        if(x - 1 >= 0) {
+            let tileIndex: number = this.getTileIndex(x - 1, y);
+            if(this.activeTiles[tileIndex].id == activeTile.id){
+                return true;
+            }
+        }
+        if(x + 1 < this.totalWidth) {
+            let tileIndex: number = this.getTileIndex(x + 1, y);
+            if(this.activeTiles[tileIndex].id == activeTile.id){
+                return true;
+            }
+        }
+        if(y - 1 >= 0) {
+            let tileIndex: number = this.getTileIndex(x, y - 1);
+            if(this.activeTiles[tileIndex].id == activeTile.id){
+                return true;
+            }
+        }
+        if(y + 1 < this.totalHeight) {
+            let tileIndex: number = this.getTileIndex(x, y + 1);
+            if(this.activeTiles[tileIndex].id == activeTile.id){
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
 }

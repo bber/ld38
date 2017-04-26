@@ -39437,6 +39437,8 @@ var Grid = function () {
 
         this.playableArea = { xStart: 0, yStart: 0, width: 0, height: 0 };
         this.surfaceTiles = [];
+        this.undergroundTiles = [];
+        this.activeTiles = [];
         this.tileTextures = {};
         this.totalHeight = totalHeight;
         this.totalWidth = totalWidth;
@@ -39456,12 +39458,46 @@ var Grid = function () {
         this.initializeTileData('img/road.png', 'road');
         this.surfaceSpriteContainer = new PIXI.Container();
         this.initializeSurfaceTiles();
+        this.undergroundSpriteContainer = new PIXI.Container();
+        this.initializeUndergroundTiles();
     }
 
     _createClass(Grid, [{
         key: "getPlaybleTiles",
         value: function getPlaybleTiles() {
             return this.playableTiles;
+        }
+    }, {
+        key: "switchToSurface",
+        value: function switchToSurface() {
+            this.activeSpriteContainer = this.surfaceSpriteContainer;
+            this.activeTiles = this.surfaceTiles;
+            this.surfaceSpriteContainer.visible = true;
+            this.undergroundSpriteContainer.visible = false;
+        }
+    }, {
+        key: "switchToUnderground",
+        value: function switchToUnderground() {
+            this.activeSpriteContainer = this.undergroundSpriteContainer;
+            this.activeTiles = this.undergroundTiles;
+            this.surfaceSpriteContainer.visible = false;
+            this.undergroundSpriteContainer.visible = true;
+        }
+    }, {
+        key: "initializeUndergroundTiles",
+        value: function initializeUndergroundTiles() {
+            for (var y = 0; y < this.totalHeight; y++) {
+                for (var x = 0; x < this.totalWidth; x++) {
+                    var tileIndex = this.getTileIndex(x, y);
+                    var sprite = this.createSpriteAtPosition('passiveDirt', x, y);
+                    this.undergroundTiles[tileIndex] = new PassiveTile_1.PassiveTile();
+                    this.undergroundTiles[tileIndex].isDefaultTile = true;
+                    this.undergroundSpriteContainer.addChildAt(sprite, tileIndex);
+                }
+            }
+            // for(var i = 0; i < defaultConnectionTiles.length; i++){
+            //     while(!generateDefaultConnections(defaultConnectionTiles[i]));
+            // }
         }
     }, {
         key: "initializeSurfaceTiles",
@@ -39514,6 +39550,57 @@ var Grid = function () {
             }
             return sprite;
         }
+    }, {
+        key: "checkCanPlaceTile",
+        value: function checkCanPlaceTile(activeTile, x, y) {
+            if (activeTile.id == this.activeTiles[this.getTileIndex(x, y)].id) {
+                return false;
+            }
+            var undergroundAndCanBePlaced = activeTile.isUnderground && this.activeSpriteContainer == this.undergroundSpriteContainer && this.activeTiles == this.undergroundTiles;
+            var surfaceAndCanbePlaced = !activeTile.isUnderground && this.activeSpriteContainer == this.surfaceSpriteContainer && this.activeTiles == this.surfaceTiles;
+            if (!undergroundAndCanBePlaced && !surfaceAndCanbePlaced) {
+                return false;
+            }
+            if (activeTile.id == 'road') {
+                return this.checkHasConnectionOfType(activeTile, x, y);
+            } else if (activeTile.id == 'pipe') {
+                return this.checkHasConnectionOfType(activeTile, x, y) || this.checkHasConnectionOfType({ id: 'powerwatercable' }, x, y);
+            } else if (activeTile.id == 'powercable') {
+                return this.checkHasConnectionOfType(activeTile, x, y) || this.checkHasConnectionOfType({ id: 'powerwatercable' }, x, y);
+            } else if (activeTile.id == 'powerwatercable') {
+                return this.checkHasConnectionOfType({ id: 'pipe' }, x, y) && this.checkHasConnectionOfType({ id: 'powercable' }, x, y) || this.checkHasConnectionOfType({ id: 'powerwatercable' }, x, y);
+            }
+            return true;
+        }
+    }, {
+        key: "checkHasConnectionOfType",
+        value: function checkHasConnectionOfType(activeTile, x, y) {
+            if (x - 1 >= 0) {
+                var tileIndex = this.getTileIndex(x - 1, y);
+                if (this.activeTiles[tileIndex].id == activeTile.id) {
+                    return true;
+                }
+            }
+            if (x + 1 < this.totalWidth) {
+                var _tileIndex = this.getTileIndex(x + 1, y);
+                if (this.activeTiles[_tileIndex].id == activeTile.id) {
+                    return true;
+                }
+            }
+            if (y - 1 >= 0) {
+                var _tileIndex2 = this.getTileIndex(x, y - 1);
+                if (this.activeTiles[_tileIndex2].id == activeTile.id) {
+                    return true;
+                }
+            }
+            if (y + 1 < this.totalHeight) {
+                var _tileIndex3 = this.getTileIndex(x, y + 1);
+                if (this.activeTiles[_tileIndex3].id == activeTile.id) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }]);
 
     return Grid;
@@ -39521,7 +39608,54 @@ var Grid = function () {
 
 exports.Grid = Grid;
 
-},{"./PassiveTile":188,"pixi.js":140}],188:[function(require,module,exports){
+},{"./PassiveTile":189,"pixi.js":140}],188:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+
+var Keyboard = function () {
+    function Keyboard() {
+        _classCallCheck(this, Keyboard);
+
+        document.removeEventListener('keydown', this.keyDownHandler);
+        document.removeEventListener('keyup', this.keyUpHandler);
+        document.addEventListener('keydown', this.keyDownHandler);
+        document.addEventListener('keyup', this.keyUpHandler);
+        console.log('Keyboard initialized.');
+    }
+
+    _createClass(Keyboard, [{
+        key: "keyUpHandler",
+        value: function keyUpHandler(event) {
+            Keyboard.activeKeys[event.keyCode] = false;
+        }
+    }, {
+        key: "keyDownHandler",
+        value: function keyDownHandler(event) {
+            Keyboard.activeKeys[event.keyCode] = true;
+        }
+    }], [{
+        key: "isKeyDown",
+        value: function isKeyDown(key) {
+            return Keyboard.activeKeys[key];
+        }
+    }]);
+
+    return Keyboard;
+}();
+
+Keyboard.activeKeys = [];
+Keyboard.UP = 87; // W
+Keyboard.DOWN = 83; // S
+Keyboard.LEFT = 65; // A
+Keyboard.RIGHT = 68; // D
+exports.Keyboard = Keyboard;
+
+},{}],189:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39564,7 +39698,7 @@ var PassiveTile = function (_Tile_1$Tile) {
 
 exports.PassiveTile = PassiveTile;
 
-},{"./Tile":189}],189:[function(require,module,exports){
+},{"./Tile":190}],190:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39648,28 +39782,52 @@ var Tile = function () {
 
 exports.Tile = Tile;
 
-},{}],190:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 "use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var PIXI = require("pixi.js");
 var Grid_1 = require("./Grid");
+var Keyboard_1 = require("./Keyboard");
 
-var Game = function Game() {
-    _classCallCheck(this, Game);
+var Game = function () {
+    function Game() {
+        var _this = this;
 
-    this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x9FD4E3 });
-    this.gridContainer = document.getElementById('canvas-container');
-    this.gridContainer.appendChild(this.app.view);
-    this.grid = new Grid_1.Grid(13, 11, 11, 9, 64, 64);
-    this.app.stage.addChild(this.grid.surfaceSpriteContainer);
-};
+        _classCallCheck(this, Game);
+
+        this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x9FD4E3 });
+        this.keyboard = new Keyboard_1.Keyboard();
+        this.gridContainer = document.getElementById('canvas-container');
+        this.gridContainer.appendChild(this.app.view);
+        this.grid = new Grid_1.Grid(13, 11, 11, 9, 64, 64);
+        this.app.stage.addChild(this.grid.surfaceSpriteContainer);
+        this.app.stage.addChild(this.grid.undergroundSpriteContainer);
+        // Gotcha: https://github.com/Microsoft/TypeScript/wiki/'this'-in-TypeScript
+        this.app.ticker.add(function (delta) {
+            return _this.update(delta);
+        });
+    }
+
+    _createClass(Game, [{
+        key: "update",
+        value: function update(delta) {
+            if (Keyboard_1.Keyboard.isKeyDown(Keyboard_1.Keyboard.UP)) {
+                this.grid.switchToSurface();
+            }
+        }
+    }]);
+
+    return Game;
+}();
 
 exports.Game = Game;
 new Game();
 
-},{"./Grid":187,"pixi.js":140}]},{},[190])
+},{"./Grid":187,"./Keyboard":188,"pixi.js":140}]},{},[191])
 
 //# sourceMappingURL=bundle.js.map
