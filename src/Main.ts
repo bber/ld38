@@ -1,22 +1,19 @@
 import * as PIXI from 'pixi.js';
+import { Grid } from './Grid';
 
 export class Game {
     private app: PIXI.Application;
-    private square: PIXI.Sprite;
+    private gridContainer: HTMLElement;
+    private grid: Grid;
 
     constructor() {
-        this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x1099bb });
-        document.getElementById('canvas-container').appendChild(this.app.view);
+        this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x9FD4E3 });
 
-        this.square = PIXI.Sprite.fromImage("img/square.png");
-        this.square.anchor.set(0.5);
-        this.square.x = this.app.renderer.width / 2;
-        this.square.y = this.app.renderer.height / 2;
-        this.app.stage.addChild(this.square);
+        this.gridContainer = document.getElementById('canvas-container');
+        this.gridContainer.appendChild(this.app.view);
 
-        this.app.ticker.add((delta: number): void => {
-            this.square.rotation += 0.1 / delta;
-        });
+        this.grid = new Grid(13, 11, 11, 9, 64, 64);
+        this.app.stage.addChild(this.grid.surfaceSpriteContainer);
     }
 }
 

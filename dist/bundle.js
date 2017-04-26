@@ -39423,31 +39423,253 @@ module.exports = {
 },{}],187:[function(require,module,exports){
 "use strict";
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var PIXI = require("pixi.js");
+var PassiveTile_1 = require("./PassiveTile");
+
+var Grid = function () {
+    function Grid(totalWidth, totalHeight, playableWidth, playableHeight, tileWidth, tileHeight) {
+        _classCallCheck(this, Grid);
+
+        this.playableArea = { xStart: 0, yStart: 0, width: 0, height: 0 };
+        this.surfaceTiles = [];
+        this.tileTextures = {};
+        this.totalHeight = totalHeight;
+        this.totalWidth = totalWidth;
+        this.playableWidth = playableWidth;
+        this.playableHeight = playableHeight;
+        this.playableTiles = this.playableWidth * this.playableHeight;
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+        this.playableArea.width = playableWidth;
+        this.playableArea.height = playableHeight;
+        this.playableArea.xStart = Math.round((totalWidth - playableWidth) / 2);
+        this.playableArea.yStart = Math.round((totalHeight - playableHeight) / 2);
+        this.initializeTileData('img/grass.png', 'passiveGrass');
+        this.initializeTileData('img/dirt.png', 'passiveDirt');
+        this.initializeTileData('img/pipeline.png', 'pipeline');
+        this.initializeTileData('img/powercable.png', 'powercable');
+        this.initializeTileData('img/road.png', 'road');
+        this.surfaceSpriteContainer = new PIXI.Container();
+        this.initializeSurfaceTiles();
+    }
+
+    _createClass(Grid, [{
+        key: "getPlaybleTiles",
+        value: function getPlaybleTiles() {
+            return this.playableTiles;
+        }
+    }, {
+        key: "initializeSurfaceTiles",
+        value: function initializeSurfaceTiles() {
+            for (var y = 0; y < this.totalHeight; y++) {
+                for (var x = 0; x < this.totalWidth; x++) {
+                    var tileIndex = this.getTileIndex(x, y);
+                    var sprite = void 0;
+                    if (x >= this.playableArea.xStart && x < this.playableArea.xStart + this.playableArea.width && y >= this.playableArea.yStart && y < this.playableArea.yStart + this.playableArea.height) {
+                        this.surfaceTiles[tileIndex] = new PassiveTile_1.PassiveTile();
+                        this.surfaceTiles[tileIndex].isDefaultTile = true;
+                        sprite = this.createSpriteAtPosition('passiveDirt', x, y);
+                        this.surfaceSpriteContainer.addChildAt(sprite, tileIndex);
+                    } else {
+                        this.surfaceTiles[tileIndex] = new PassiveTile_1.PassiveTile();
+                        this.surfaceTiles[tileIndex].isDefaultTile = true;
+                        sprite = this.createSpriteAtPosition('passiveGrass', x, y);
+                        this.surfaceSpriteContainer.addChildAt(sprite, tileIndex);
+                    }
+                }
+            }
+        }
+    }, {
+        key: "initializeTileData",
+        value: function initializeTileData(imageName, key) {
+            var texture = PIXI.Texture.fromImage(imageName);
+            this.tileTextures[key] = texture;
+        }
+    }, {
+        key: "getTileIndex",
+        value: function getTileIndex(x, y) {
+            return y * this.totalWidth + x;
+        }
+    }, {
+        key: "createSpriteAtPosition",
+        value: function createSpriteAtPosition(key, x, y) {
+            var sprite = new PIXI.Sprite(this.tileTextures[key]);
+            sprite.anchor.set(0);
+            sprite.width = this.tileWidth;
+            sprite.height = this.tileHeight;
+            sprite.x = x * this.tileWidth;
+            sprite.y = y * this.tileHeight;
+            if (x >= this.playableArea.xStart && x < this.playableArea.xStart + this.playableArea.width && y >= this.playableArea.yStart && y < this.playableArea.yStart + this.playableArea.height) {
+                sprite.buttonMode = true;
+                sprite.interactive = true;
+                sprite.on('pointerdown', onTileClicked);
+            }
+            function onTileClicked() {
+                console.log("Tile clicked at X: " + x + " Y: " + y);
+            }
+            return sprite;
+        }
+    }]);
+
+    return Grid;
+}();
+
+exports.Grid = Grid;
+
+},{"./PassiveTile":188,"pixi.js":140}],188:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Tile_1 = require("./Tile");
+
+var PassiveTile = function (_Tile_1$Tile) {
+    _inherits(PassiveTile, _Tile_1$Tile);
+
+    function PassiveTile() {
+        _classCallCheck(this, PassiveTile);
+
+        var _this = _possibleConstructorReturn(this, (PassiveTile.__proto__ || Object.getPrototypeOf(PassiveTile)).call(this));
+
+        _this.id = 'passive';
+        return _this;
+    }
+
+    _createClass(PassiveTile, [{
+        key: "getCurrentIncome",
+        value: function getCurrentIncome() {
+            return 0;
+        }
+    }, {
+        key: "getCurrentCost",
+        value: function getCurrentCost() {
+            return 0;
+        }
+    }]);
+
+    return PassiveTile;
+}(Tile_1.Tile);
+
+exports.PassiveTile = PassiveTile;
+
+},{"./Tile":189}],189:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+
+var Tile = function () {
+    function Tile() {
+        _classCallCheck(this, Tile);
+
+        this.baseIncome = 0;
+        this.initialCost = 0;
+        this.maintenanceCost = 0;
+        this.level = 0;
+        this.texture = 0;
+        this.isUnderground = false;
+        this.hasWater = false;
+        this.hasElectricity = false;
+        this.hasRoad = false;
+        this.isDefaultTile = false;
+        this.basePopulationCapacity = 0;
+        this.baseFoodProduction = 0;
+        this.baseJobsProvided = 0;
+        this.baseWaterProvided = 0;
+        this.baseElectricityProvided = 0;
+        this.maxLevel = -1;
+    }
+
+    _createClass(Tile, [{
+        key: "getCurrentUpgradeCost",
+        value: function getCurrentUpgradeCost() {
+            return this.initialCost + 200 * this.level + 200;
+        }
+    }, {
+        key: "getCurrentIncome",
+        value: function getCurrentIncome() {
+            if (this.isDefaultTile) {
+                return 0;
+            }
+            return this.level * 35 / (this.level + 2.5) + this.baseIncome;
+        }
+    }, {
+        key: "getCurrentCost",
+        value: function getCurrentCost() {
+            if (this.isDefaultTile) {
+                return 0;
+            }
+            return 0.5 * this.level * 35 / (0.5 * this.level + 2.5) + this.maintenanceCost;
+        }
+    }, {
+        key: "getCurrentJobsProvided",
+        value: function getCurrentJobsProvided() {
+            return this.baseJobsProvided * (this.level + 1);
+        }
+    }, {
+        key: "getCurrentFoodProduced",
+        value: function getCurrentFoodProduced() {
+            return this.baseFoodProduction * (this.level + 1);
+        }
+    }, {
+        key: "getCurrentWaterProvided",
+        value: function getCurrentWaterProvided() {
+            return this.baseWaterProvided * (this.level + 1);
+        }
+    }, {
+        key: "getCurrentElectricityProvided",
+        value: function getCurrentElectricityProvided() {
+            return this.baseElectricityProvided * (this.level + 1);
+        }
+    }, {
+        key: "getCurrentPopulationCapacity",
+        value: function getCurrentPopulationCapacity() {
+            return this.basePopulationCapacity * (this.level + 1);
+        }
+    }]);
+
+    return Tile;
+}();
+
+exports.Tile = Tile;
+
+},{}],190:[function(require,module,exports){
+"use strict";
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var PIXI = require("pixi.js");
+var Grid_1 = require("./Grid");
 
 var Game = function Game() {
-    var _this = this;
-
     _classCallCheck(this, Game);
 
-    this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x1099bb });
-    document.getElementById('canvas-container').appendChild(this.app.view);
-    this.square = PIXI.Sprite.fromImage("img/square.png");
-    this.square.anchor.set(0.5);
-    this.square.x = this.app.renderer.width / 2;
-    this.square.y = this.app.renderer.height / 2;
-    this.app.stage.addChild(this.square);
-    this.app.ticker.add(function (delta) {
-        _this.square.rotation += 0.1 / delta;
-    });
+    this.app = new PIXI.Application(1280, 720, { backgroundColor: 0x9FD4E3 });
+    this.gridContainer = document.getElementById('canvas-container');
+    this.gridContainer.appendChild(this.app.view);
+    this.grid = new Grid_1.Grid(13, 11, 11, 9, 64, 64);
+    this.app.stage.addChild(this.grid.surfaceSpriteContainer);
 };
 
 exports.Game = Game;
 new Game();
 
-},{"pixi.js":140}]},{},[187])
+},{"./Grid":187,"pixi.js":140}]},{},[190])
 
 //# sourceMappingURL=bundle.js.map
