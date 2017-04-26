@@ -5,6 +5,10 @@ var tsify = require('tsify');
 var sourcemaps = require('gulp-sourcemaps');
 var buffer = require('vinyl-buffer');
 
+var paths = {
+  scripts: ['src/*.ts']
+};
+
 // Based on the docs at:  https://www.typescriptlang.org/docs/handbook/gulp.html
 gulp.task('default', function () {
     return browserify({
@@ -25,4 +29,9 @@ gulp.task('default', function () {
     .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('dist'));
+});
+
+// Rerun the task when a file changes
+gulp.task('watch', function() {
+    gulp.watch(paths.scripts, ['default']);
 });
