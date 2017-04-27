@@ -39698,7 +39698,208 @@ var PassiveTile = function (_Tile_1$Tile) {
 
 exports.PassiveTile = PassiveTile;
 
-},{"./Tile":190}],190:[function(require,module,exports){
+},{"./Tile":191}],190:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+
+var Sidebar = function () {
+    function Sidebar(x, y, width, height) {
+        _classCallCheck(this, Sidebar);
+
+        this.width = width;
+        this.height = height;
+        this.xPos = x;
+        this.yPos = y;
+        this.sidebarContainer = new PIXI.Container();
+        this.sidebarContainer.width = width;
+        this.sidebarContainer.height = height;
+        this.sidebarContainer.x = x;
+        this.sidebarContainer.y = y;
+        this.sideBarTextStyle = new PIXI.TextStyle({
+            fontFamily: 'Courier New',
+            fontSize: 20,
+            fill: ['#ffffff']
+        });
+        this.currencyText = this.createSidebarValue(this.sidebarContainer, 8, 6, 160, 32, 'img/money.png');
+        this.peopleText = this.createSidebarValue(this.sidebarContainer, 8, 44, 160, 32, 'img/people.png');
+        this.technologyText = this.createSidebarValue(this.sidebarContainer, 8, 82, 160, 32, 'img/tech.png');
+        this.foodText = this.createSidebarValue(this.sidebarContainer, 8, 120, 160, 32, 'img/food.png');
+        this.waterText = this.createSidebarValue(this.sidebarContainer, 8, 158, 160, 32, 'img/water.png');
+        this.electricityText = this.createSidebarValue(this.sidebarContainer, 8, 196, 160, 32, 'img/electricity.png');
+        this.workText = this.createSidebarValue(this.sidebarContainer, 8, 234, 160, 32, 'img/work.png');
+        this.tooltipBackground = new PIXI.Graphics();
+        this.tooltipTextStyle = new PIXI.TextStyle({
+            fontFamily: 'Courier New',
+            fontSize: 15,
+            fill: ['#FFFFFF']
+        });
+        this.initialCostTooltipText = new PIXI.Text('', this.tooltipTextStyle);
+        var buildingBackground = new PIXI.Graphics();
+        buildingBackground.beginFill(0x888888);
+        buildingBackground.drawRect(8, 270, 160, 180);
+        var buildingsHeader = PIXI.Sprite.fromImage('img/buildingsHeader.png');
+        buildingsHeader.x = 8;
+        buildingsHeader.y = 270;
+        this.sidebarContainer.addChild(buildingBackground);
+        this.sidebarContainer.addChild(buildingsHeader);
+        this.farmButton = this.createSidebarTile(this.sidebarContainer, 98, 300, 'farm', 'img/farmland.png');
+        this.houseButton = this.createSidebarTile(this.sidebarContainer, 18, 300, 'house', 'img/house.png');
+        this.shopButton = this.createSidebarTile(this.sidebarContainer, 98, 380, 'shop', 'img/shop.png');
+        this.industryButton = this.createSidebarTile(this.sidebarContainer, 18, 380, 'industry', 'img/industry.png');
+        // Transport
+        var transportHeader = PIXI.Sprite.fromImage('img/transportHeader.png');
+        transportHeader.x = 8;
+        transportHeader.y = 455;
+        var transportBackground = new PIXI.Graphics();
+        transportBackground.beginFill(0x888888);
+        transportBackground.drawRect(8, 455, 160, 180);
+        this.sidebarContainer.addChild(transportBackground);
+        this.sidebarContainer.addChild(transportHeader);
+        this.pipeButton = this.createSidebarTile(this.sidebarContainer, 98, 485, 'pipe', 'img/pipeline.png');
+        this.roadButton = this.createSidebarTile(this.sidebarContainer, 18, 485, 'road', 'img/road.png');
+        this.powerWaterCableButton = this.createSidebarTile(this.sidebarContainer, 98, 565, 'powerwatercable', 'img/powerWaterCable.png');
+        this.powerCableButton = this.createSidebarTile(this.sidebarContainer, 18, 565, 'powercable', 'img/powercable.png');
+        this.createToggleLayerButton(this.sidebarContainer, 'img/toggleLayerButton.png', 8, 645);
+        this.initialCostTooltipText.x = 8;
+        this.initialCostTooltipText.y = 8;
+        // this.tooltipBackground.addChild(this.initialCostTooltipText);
+        // this.tooltipBackground.redraw = function(coordinates, tileInitialCost){
+        //     this.initialCostTooltipText.text = "$" + tileInitialCost.formatCustom(0, '.', ',');
+        //     if(coordinates){
+        //         this.tooltipBackground.x = coordinates.x;
+        //         this.tooltipBackground.y = coordinates.y;
+        //     }
+        //     this.tooltipBackground.clear();
+        //     this.tooltipBackground.beginFill(0x333333, 0.75);
+        //     this.tooltipBackground.drawRect(0, 0, this.initialCostTooltipText.width + 16, this.initialCostTooltipText.height + 16);                    
+        // }
+    }
+
+    _createClass(Sidebar, [{
+        key: "getSidebarContainer",
+        value: function getSidebarContainer() {
+            return this.sidebarContainer;
+        }
+    }, {
+        key: "createSidebarValue",
+        value: function createSidebarValue(container, x, y, width, height, icon) {
+            var valueBackground = new PIXI.Graphics();
+            valueBackground.beginFill(0x888888);
+            valueBackground.drawRect(x + 8, y + 2, width - 8, height - 4);
+            var valueIcon = PIXI.Sprite.fromImage(icon);
+            valueIcon.x = x;
+            valueIcon.y = y;
+            var valueText = new PIXI.Text('0', this.sideBarTextStyle);
+            valueText.x = x + 40;
+            valueText.y = y + 6;
+            container.addChild(valueBackground);
+            container.addChild(valueIcon);
+            container.addChild(valueText);
+            return valueText;
+        }
+    }, {
+        key: "createSidebarTile",
+        value: function createSidebarTile(container, x, y, id, icon) {
+            var _this = this;
+
+            var tileButton = PIXI.Sprite.fromImage(icon);
+            tileButton.interactive = true;
+            tileButton.buttonMode = true;
+            tileButton.on('pointerup', function () {
+                console.log('LD.setActiveTile(id, tileButton.texture);');
+            });
+            tileButton.x = x;
+            tileButton.y = y;
+            var overTileButton = false;
+            var tileInitialCost = 100; // new LD.TileStorage.buildingConstructors[id]().initialCost;     
+            tileButton.on('pointerover', function (args) {
+                tileButton.addChild(_this.tooltipBackground);
+                overTileButton = true;
+                _this.tooltipBackground.visible = true;
+                var localPosition = args.data.getLocalPosition(tileButton);
+                localPosition.x += 10;
+                localPosition.y -= _this.initialCostTooltipText.height + 10;
+                //this.tooltipBackground.redraw(localPosition, tileInitialCost);
+            });
+            tileButton.on('pointermove', function (args) {
+                if (!overTileButton) {
+                    return;
+                }
+                var localPosition = args.data.getLocalPosition(tileButton);
+                localPosition.x += 10;
+                localPosition.y -= _this.initialCostTooltipText.height + 10;
+                //this.tooltipBackground.redraw(localPosition, tileInitialCost);
+            });
+            tileButton.on('pointerout', function (args) {
+                overTileButton = false;
+                _this.tooltipBackground.visible = false;
+            });
+            this.tooltipBackground.beginFill(0x333333);
+            this.tooltipBackground.visible = false;
+            container.addChild(tileButton);
+            return tileButton;
+        }
+    }, {
+        key: "createToggleLayerButton",
+        value: function createToggleLayerButton(container, icon, x, y) {
+            var button = PIXI.Sprite.fromImage(icon);
+            button.interactive = true;
+            button.buttonMode = true;
+            button.on('pointerup', function () {
+                return console.log('toggleLayerButtonClicked');
+            });
+            button.x = x;
+            button.y = y;
+            container.addChild(button);
+        }
+    }, {
+        key: "setCurrency",
+        value: function setCurrency(value) {
+            this.currencyText.text = '' + value;
+        }
+    }, {
+        key: "setTechnology",
+        value: function setTechnology(value) {
+            this.technologyText.text = '' + value;
+        }
+    }, {
+        key: "setFood",
+        value: function setFood(value) {
+            this.foodText.text = '' + value;
+        }
+    }, {
+        key: "setWater",
+        value: function setWater(value) {
+            this.waterText.text = '' + value;
+        }
+    }, {
+        key: "setElectricity",
+        value: function setElectricity(value) {
+            this.electricityText.text = '' + value;
+        }
+    }, {
+        key: "setWork",
+        value: function setWork(value) {
+            this.workText.text = '' + value;
+        }
+    }, {
+        key: "setPeople",
+        value: function setPeople(current, total) {
+            this.peopleText.text = current + " / " + total;
+        }
+    }]);
+
+    return Sidebar;
+}();
+
+exports.Sidebar = Sidebar;
+
+},{}],191:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39782,7 +39983,7 @@ var Tile = function () {
 
 exports.Tile = Tile;
 
-},{}],191:[function(require,module,exports){
+},{}],192:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39793,6 +39994,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var PIXI = require("pixi.js");
 var Grid_1 = require("./Grid");
 var Keyboard_1 = require("./Keyboard");
+var Sidebar_1 = require("./Sidebar");
 
 var Game = function () {
     function Game() {
@@ -39807,6 +40009,8 @@ var Game = function () {
         this.grid = new Grid_1.Grid(13, 11, 11, 9, 64, 64);
         this.app.stage.addChild(this.grid.surfaceSpriteContainer);
         this.app.stage.addChild(this.grid.undergroundSpriteContainer);
+        this.sidebar = new Sidebar_1.Sidebar(1100, 0, 180, 720);
+        this.app.stage.addChild(this.sidebar.getSidebarContainer());
         // Gotcha: https://github.com/Microsoft/TypeScript/wiki/'this'-in-TypeScript
         this.app.ticker.add(function (delta) {
             return _this.update(delta);
@@ -39828,6 +40032,6 @@ var Game = function () {
 exports.Game = Game;
 new Game();
 
-},{"./Grid":187,"./Keyboard":188,"pixi.js":140}]},{},[191])
+},{"./Grid":187,"./Keyboard":188,"./Sidebar":190,"pixi.js":140}]},{},[192])
 
 //# sourceMappingURL=bundle.js.map
