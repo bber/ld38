@@ -39698,7 +39698,7 @@ var PassiveTile = function (_Tile_1$Tile) {
 
 exports.PassiveTile = PassiveTile;
 
-},{"./Tile":191}],190:[function(require,module,exports){
+},{"./Tile":192}],190:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39908,6 +39908,151 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 Object.defineProperty(exports, "__esModule", { value: true });
 
+var StatusBar = function () {
+    function StatusBar(x, y, width, height) {
+        var _this = this;
+
+        _classCallCheck(this, StatusBar);
+
+        this.setActiveBuilding = function setActiveBuilding(building) {
+            this.activeBuilding = building;
+            this.activeBuildingSprite.texture = this.activeBuilding.texture;
+            this.activeBuildingSprite.alpha = 255;
+            this.setBuildingNameDisplay(building.name);
+            this.setBuildingLevelDisplay(building.level);
+            this.barContainer.visible = true;
+        };
+        this.clearActiveBuilding = function clearActiveBuilding() {
+            this.activeBuilding = null;
+            this.activeBuildingSprite.alpha = 0;
+            this.barContainer.visible = false;
+        };
+        this.width = width;
+        this.height = height;
+        this.barContainer = new PIXI.Container();
+        this.barContainer.width = width;
+        this.barContainer.height = height;
+        this.barContainer.x = x;
+        this.barContainer.y = y;
+        this.background = new PIXI.Graphics();
+        this.background.beginFill(0x999999);
+        this.background.drawRect(0, 0, width, height);
+        var headerBackground = new PIXI.Graphics();
+        headerBackground.beginFill(0x333333);
+        headerBackground.drawRect(0, 0, width, 32);
+        this.buildingTextStyle = new PIXI.TextStyle({
+            fontFamily: 'Courier New',
+            fontSize: 20,
+            fill: ['#FFFFFF']
+        });
+        this.buildingName = new PIXI.Text('', this.buildingTextStyle);
+        this.buildingName.x = Math.floor(width / 2 - this.buildingName.width / 2);
+        this.buildingName.y = 6;
+        this.buildingLevel = new PIXI.Text('', this.buildingTextStyle);
+        this.buildingLevel.x = Math.floor(width / 2 - this.buildingLevel.width / 2);
+        this.buildingLevel.y = 112;
+        this.activeBuildingSprite = PIXI.Sprite.fromImage('img/road.png');
+        this.activeBuildingSprite.x = width / 2 - 32;
+        this.activeBuildingSprite.y = 40;
+        this.upgradeButton = PIXI.Sprite.fromImage('img/upgradeButton.png');
+        this.upgradeButton.x = width / 2 - 72;
+        this.upgradeButton.y = 140;
+        this.upgradeButton.interactive = true;
+        this.upgradeButton.buttonMode = true;
+        this.upgradeButton.on('pointerup', function (event) {
+            if (_this.activeBuilding) {
+                // LD.notify('upgradeTileButtonClicked', activeBuilding);
+                console.log('upgradeTileButtonClicked');
+                //tooltipBackground.redraw();
+                _this.setBuildingLevelDisplay(_this.activeBuilding.level);
+            }
+        });
+        var overUpgradeButton = false;
+        this.upgradeButton.on('pointerover', function (args) {
+            overUpgradeButton = true;
+            tooltipBackground.visible = true;
+            var localPosition = args.data.getLocalPosition(_this.upgradeButton);
+            localPosition.x += 10;
+            localPosition.y -= _this.upgradeCostTooltipText.height + 10;
+            //tooltipBackground.redraw(localPosition);
+        });
+        this.upgradeButton.on('pointermove', function (args) {
+            if (!overUpgradeButton) {
+                return;
+            }
+            var localPosition = args.data.getLocalPosition(_this.upgradeButton);
+            localPosition.x += 10;
+            localPosition.y -= _this.upgradeCostTooltipText.height + 10;
+            //tooltipBackground.redraw(localPosition);
+        });
+        this.upgradeButton.on('pointerout', function (args) {
+            overUpgradeButton = false;
+            tooltipBackground.visible = false;
+        });
+        var tooltipTextStyle = new PIXI.TextStyle({
+            fontFamily: 'Courier New',
+            fontSize: 15,
+            fill: ['#FFFFFF']
+        });
+        var tooltipBackground = new PIXI.Graphics();
+        tooltipBackground.visible = false;
+        // tooltipBackground.redraw = (coordinates: any) => {
+        //     this.upgradeCostTooltipText.text = "$" + this.activeBuilding.getCurrentUpgradeCost().formatCustom(0, '.', ',');
+        //     if(coordinates){
+        //         tooltipBackground.x = coordinates.x;
+        //         tooltipBackground.y = coordinates.y;
+        //     }
+        //     tooltipBackground.clear();
+        //     tooltipBackground.beginFill(0x333333, 0.75);
+        //     tooltipBackground.drawRect(0, 0, this.upgradeCostTooltipText.width + 16, this.upgradeCostTooltipText.height + 16);                    
+        // }
+        this.upgradeCostTooltipText = new PIXI.Text('', tooltipTextStyle);
+        this.upgradeCostTooltipText.x = 8;
+        this.upgradeCostTooltipText.y = 8;
+        this.barContainer.addChild(this.background);
+        this.barContainer.addChild(headerBackground);
+        this.barContainer.addChild(this.activeBuildingSprite);
+        this.barContainer.addChild(this.upgradeButton);
+        this.barContainer.addChild(this.buildingName);
+        this.barContainer.addChild(this.buildingLevel);
+        this.upgradeButton.addChild(tooltipBackground);
+        tooltipBackground.addChild(this.upgradeCostTooltipText);
+        // this.barContainer.visible = false;
+    }
+
+    _createClass(StatusBar, [{
+        key: "getContainer",
+        value: function getContainer() {
+            return this.barContainer;
+        }
+    }, {
+        key: "setBuildingNameDisplay",
+        value: function setBuildingNameDisplay(name) {
+            this.buildingName.text = name;
+            this.buildingName.x = Math.floor(this.width / 2 - this.buildingName.width / 2);
+        }
+    }, {
+        key: "setBuildingLevelDisplay",
+        value: function setBuildingLevelDisplay(level) {
+            this.buildingLevel.text = level;
+            this.buildingLevel.x = Math.floor(this.width / 2 - this.buildingLevel.width / 2);
+        }
+    }]);
+
+    return StatusBar;
+}();
+
+exports.StatusBar = StatusBar;
+
+},{}],192:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+Object.defineProperty(exports, "__esModule", { value: true });
+
 var Tile = function () {
     function Tile() {
         _classCallCheck(this, Tile);
@@ -39983,7 +40128,7 @@ var Tile = function () {
 
 exports.Tile = Tile;
 
-},{}],192:[function(require,module,exports){
+},{}],193:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -39995,6 +40140,7 @@ var PIXI = require("pixi.js");
 var Grid_1 = require("./Grid");
 var Keyboard_1 = require("./Keyboard");
 var Sidebar_1 = require("./Sidebar");
+var StatusBar_1 = require("./StatusBar");
 
 var Game = function () {
     function Game() {
@@ -40011,6 +40157,8 @@ var Game = function () {
         this.app.stage.addChild(this.grid.undergroundSpriteContainer);
         this.sidebar = new Sidebar_1.Sidebar(1100, 0, 180, 720);
         this.app.stage.addChild(this.sidebar.getSidebarContainer());
+        this.statusBar = new StatusBar_1.StatusBar(940, 10, 160, 180);
+        this.app.stage.addChild(this.statusBar.getContainer());
         // Gotcha: https://github.com/Microsoft/TypeScript/wiki/'this'-in-TypeScript
         this.app.ticker.add(function (delta) {
             return _this.update(delta);
@@ -40032,6 +40180,6 @@ var Game = function () {
 exports.Game = Game;
 new Game();
 
-},{"./Grid":187,"./Keyboard":188,"./Sidebar":190,"pixi.js":140}]},{},[192])
+},{"./Grid":187,"./Keyboard":188,"./Sidebar":190,"./StatusBar":191,"pixi.js":140}]},{},[193])
 
 //# sourceMappingURL=bundle.js.map

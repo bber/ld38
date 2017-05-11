@@ -145,7 +145,6 @@ export class Sidebar {
         return valueText;
     }
 
-
     private createSidebarTile(container: PIXI.Container, x: number, y: number, id: string, icon: string): PIXI.Sprite {
         var tileButton = PIXI.Sprite.fromImage(icon);
         tileButton.interactive = true;
